@@ -1,29 +1,23 @@
 package ru.yandex.practicum.javafilmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.javafilmorate.model.User;
+import ru.yandex.practicum.javafilmorate.service.UserService;
 import ru.yandex.practicum.javafilmorate.util.exception.ValidationException;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Collection;
 
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
 @Slf4j
 public class UserController {
 
-    private final Map<Integer, User> users = new HashMap<>();
-    private int id;
-
-    @GetMapping
-    public List<User> findAll() {
-        return new ArrayList<>(users.values());
-    }
+    private final UserService userService;
 
     @PostMapping
     public User create(@Valid @RequestBody User user, BindingResult result) {
@@ -32,18 +26,54 @@ public class UserController {
             throw new ValidationException("ValidationException");
         }
 
-        user.setId(id);
-        users.put(id, user);
+        userService.create(user);
         log.info("User {} is created", user);
-        id++;
+
         return user;
+    }
+
+    @GetMapping("/{id}")
+    public User getById(@PathVariable int id) {
+        return userService.getById(id).orElseThrow();
+    }
+
+    @GetMapping
+    public Collection<User> getAll() {
+        return userService.getAll();
+    }
+
+    @PutMapping("{id}/friends/{friendId}")
+    public void addToFriends(@PathVariable int id, @PathVariable int friendId) {
+        userService.addToFriends(id, friendId);
+        log.info("User with ID {} has been added as a friend to a user with ID {}", id, friendId);
+    }
+
+    @DeleteMapping("{id}/friends/{friendId}")
+    public void deleteToFriends(@PathVariable int id, @PathVariable int friendId) {
+        userService.deleteFromFriends(id, friendId);
+        log.info("User with ID {} has been removed as a friend to a user with ID {}", id, friendId);
+    }
+
+    @GetMapping("{id}/friends")
+    public Collection<User> getFriends(@PathVariable int id) {
+        return userService.getFriends(id);
+    }
+
+    @GetMapping("{id}/friends/common/{otherId}")
+    public Collection<User> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
+        return userService.getCommonFriends(id, otherId);
     }
 
     @PutMapping
-    public User update(@Valid @RequestBody User user) {
-        users.put(user.getId(), user);
+    public User update(@Valid @RequestBody User user, BindingResult result) {
+        if(result.getErrorCount() != 0) {
+            log.error("{}", result.getAllErrors());
+            throw new ValidationException("ValidationException");
+        }
+
+        userService.update(user);
         log.info("User {} is updated", user);
+
         return user;
     }
-
 }

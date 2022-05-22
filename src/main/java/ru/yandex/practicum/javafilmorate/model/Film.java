@@ -1,7 +1,9 @@
 package ru.yandex.practicum.javafilmorate.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
 import org.hibernate.validator.constraints.time.DurationMin;
+import ru.yandex.practicum.javafilmorate.util.util.CustomDurationSerializer;
 import ru.yandex.practicum.javafilmorate.util.validator.After;
 
 import javax.validation.constraints.NotBlank;
@@ -17,7 +19,7 @@ public class Film {
     @NotBlank
     private String name;
 
-    @Size(min =1, max = 20)
+    @Size(min =1, max = 200)
     @NotBlank
     private String description;
 
@@ -25,5 +27,6 @@ public class Film {
     private LocalDate releaseDate;
 
     @DurationMin(seconds = 1)
+    @JsonSerialize(using = CustomDurationSerializer.class)
     private Duration duration;
 }
