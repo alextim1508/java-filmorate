@@ -1,9 +1,12 @@
 package ru.yandex.practicum.javafilmorate.service;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.javafilmorate.model.User;
-import ru.yandex.practicum.javafilmorate.storage.UserStorage;
+import ru.yandex.practicum.javafilmorate.service.interfaces.UserService;
+import ru.yandex.practicum.javafilmorate.storage.interfaces.FriendStorage;
+import ru.yandex.practicum.javafilmorate.storage.interfaces.UserStorage;
 import ru.yandex.practicum.javafilmorate.util.exception.StorageOperationException;
 
 import java.util.*;
@@ -11,25 +14,24 @@ import java.util.*;
 import static ru.yandex.practicum.javafilmorate.util.util.ErrorMessage.*;
 
 @Service
-@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserStorage userStorage;
+    private final FriendStorage friendStorage;
 
-    private final Map<Integer, List<Integer>> friendsByUser = new HashMap<>();
+    public UserServiceImpl(@Qualifier("userDbStorage") UserStorage userStorage,
+                           FriendStorage friendStorage) {
+        this.userStorage = userStorage;
+        this.friendStorage = friendStorage;
+    }
 
     @Override
     public User create(User user) {
-        if (user.getId() != 0)
-            throw new StorageOperationException(SAVED_USER_STATUS_ERROR);
-
         try {
             userStorage.save(user);
         } catch (Exception e) {
-            throw new StorageOperationException(USER_CREATION_ERROR);
+            throw new StorageOperationException(USER_CREATION_ERROR, e);
         }
-
-        friendsByUser.putIfAbsent(user.getId(), new ArrayList<>());
 
         return user;
     }
@@ -45,30 +47,32 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void addToFriends(int id, int friendId) {
-        checkFriendsOperation(id, friendId);
+    public void update(User user) {
+        if(userStorage.update(user) == 0)
+            throw new EmptyResultDataAccessException(1);
+    }
 
-        friendsByUser.get(id).add(friendId);
-        friendsByUser.get(friendId).add(id);
+    @Override
+    public void delete(int id) {
+        if(!userStorage.deleteById(id)) {
+            throw new EmptyResultDataAccessException(1);
+        }
+    }
+
+    @Override
+    public void addToFriends(int id, int friendId) {
+        friendStorage.addToFriends(id, friendId);
     }
 
     @Override
     public void deleteFromFriends(int id, int friendId) {
-        checkFriendsOperation(id, friendId);
-
-        friendsByUser.get(id).remove(Integer.valueOf(friendId));
-        friendsByUser.get(friendId).remove(Integer.valueOf(id));
-    }
-
-    private void checkFriendsOperation(int id, int friendId) {
-        getById(id).orElseThrow();
-        getById(friendId).orElseThrow();
+        friendStorage.removeFromFriends(id, friendId);
     }
 
     @Override
     public Collection<User> getFriends(int id) {
         Collection<User> friends = new ArrayList<>();
-        for (int friendId : this.friendsByUser.get(id)) {
+        for (int friendId : friendStorage.getFriendIds(id)) {
             friends.add(getById(friendId).orElseThrow());
         }
         return friends;
@@ -76,8 +80,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Collection<User> getCommonFriends(int id, int otherId) {
-        List<Integer> commonId = new ArrayList<>(friendsByUser.get(id));
-        commonId.retainAll(friendsByUser.get(otherId));
+        List<Integer> commonId = new ArrayList<>(friendStorage.getFriendIds(id));
+        commonId.retainAll(friendStorage.getFriendIds(otherId));
 
         Collection<User> commonFriends = new ArrayList<>();
         for (int friendId : commonId) {
@@ -85,31 +89,5 @@ public class UserServiceImpl implements UserService {
         }
 
         return commonFriends;
-    }
-
-    @Override
-    public void update(User user) {
-        if (user.getId() == 0)
-            throw new StorageOperationException(UPDATED_USER_STATUS_ERROR);
-
-        getById(user.getId()).orElseThrow();
-
-        try {
-            userStorage.save(user);
-        } catch (Exception e) {
-            throw new StorageOperationException(USER_UPDATE_ERROR);
-        }
-    }
-
-    @Override
-    public void delete(int id) {
-        try {
-            userStorage.deleteById(id);
-        } catch (Exception e) {
-            throw new StorageOperationException(USER_DELETION_ERROR);
-        }
-
-        friendsByUser.remove(id);
-        friendsByUser.values().forEach(userFriends -> userFriends.remove(id));
     }
 }

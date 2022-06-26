@@ -2,9 +2,11 @@ package ru.yandex.practicum.javafilmorate.storage;
 
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.javafilmorate.model.Film;
+import ru.yandex.practicum.javafilmorate.storage.interfaces.FilmStorage;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -45,7 +47,22 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public void deleteById(int id) {
-        storage.remove(id);
+    public int update(Film film) {
+        if(storage.containsKey(film.getId())) {
+            storage.put(film.getId(), film);
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    @Override
+    public boolean deleteById(int id) {
+        return storage.remove(id) != null;
+    }
+
+    @Override
+    public List<Film> getPopular(int limit) {
+        return null;
     }
 }

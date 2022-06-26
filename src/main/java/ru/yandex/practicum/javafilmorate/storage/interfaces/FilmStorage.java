@@ -1,8 +1,9 @@
-package ru.yandex.practicum.javafilmorate.storage;
+package ru.yandex.practicum.javafilmorate.storage.interfaces;
 
 import ru.yandex.practicum.javafilmorate.model.Film;
 
 import java.util.Collection;
+import java.util.List;
 
 public interface FilmStorage {
 
@@ -12,5 +13,9 @@ public interface FilmStorage {
 
     Collection<Film> findAll();
 
-    void deleteById(int id);
+    int update(Film film);
+
+    boolean deleteById(int id);
+
+    List<Film> getPopular(int limit);
 }

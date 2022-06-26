@@ -13,6 +13,5 @@ public class CustomDurationSerializer extends JsonSerializer<Duration> {
     public void serialize(Duration duration, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
         jsonGenerator.writeNumber(duration.getSeconds());
-
     }
 }

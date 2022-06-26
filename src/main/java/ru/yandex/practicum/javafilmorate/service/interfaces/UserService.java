@@ -1,4 +1,4 @@
-package ru.yandex.practicum.javafilmorate.service;
+package ru.yandex.practicum.javafilmorate.service.interfaces;
 
 import ru.yandex.practicum.javafilmorate.model.User;
 
@@ -13,6 +13,10 @@ public interface UserService {
 
     Collection<User> getAll();
 
+    void update(User user);
+
+    void delete(int id);
+
     void addToFriends(int id, int friendId);
 
     void deleteFromFriends(int id, int friendId);
@@ -20,8 +24,4 @@ public interface UserService {
     Collection<User> getFriends(int id);
 
     Collection<User> getCommonFriends(int id, int otherId);
-
-    void update(User user);
-
-    void delete(int id);
 }

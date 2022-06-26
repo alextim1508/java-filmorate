@@ -2,6 +2,7 @@ package ru.yandex.practicum.javafilmorate.storage;
 
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.javafilmorate.model.User;
+import ru.yandex.practicum.javafilmorate.storage.interfaces.UserStorage;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -45,7 +46,17 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public void deleteById(int id) {
-        storage.remove(id);
+    public int update(User user) {
+        if(storage.containsKey(user.getId())) {
+            storage.put(user.getId(), user);
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    @Override
+    public boolean deleteById(int id) {
+        return storage.remove(id) != null;
     }
 }

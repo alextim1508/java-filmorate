@@ -2,10 +2,11 @@ package ru.yandex.practicum.javafilmorate.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.javafilmorate.model.Film;
-import ru.yandex.practicum.javafilmorate.service.FilmService;
+import ru.yandex.practicum.javafilmorate.service.interfaces.FilmService;
 import ru.yandex.practicum.javafilmorate.util.exception.ValidationException;
 
 import javax.validation.Valid;
@@ -35,12 +36,26 @@ public class FilmController {
 
     @GetMapping("/{id}")
     public Film getById(@PathVariable int id) {
-        return filmService.getById(id).orElseThrow();
+        return filmService.getById(id).orElseThrow(() ->
+                new EmptyResultDataAccessException(1));
     }
 
     @GetMapping
     public Collection<Film> getAll() {
         return filmService.getAll();
+    }
+
+    @PutMapping
+    public Film update(@Valid @RequestBody Film film, BindingResult result) {
+        if(result.getErrorCount() != 0) {
+            log.error("{}", result.getAllErrors());
+            throw new ValidationException("ValidationException");
+        }
+
+        filmService.update(film);
+        log.info("Film {} is updated", film);
+
+        return film;
     }
 
     @PutMapping("{id}/like/{userId}")
@@ -58,18 +73,5 @@ public class FilmController {
     @GetMapping("popular")
     public Collection<Film> getPopular(@RequestParam Optional<Integer> count) {
         return filmService.getPopular(count);
-    }
-
-    @PutMapping
-    public Film update(@Valid @RequestBody Film film, BindingResult result) {
-        if(result.getErrorCount() != 0) {
-            log.error("{}", result.getAllErrors());
-            throw new ValidationException("ValidationException");
-        }
-
-        filmService.update(film);
-        log.info("Film {} is updated", film);
-
-        return film;
     }
 }

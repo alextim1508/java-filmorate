@@ -2,10 +2,11 @@ package ru.yandex.practicum.javafilmorate.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.javafilmorate.model.User;
-import ru.yandex.practicum.javafilmorate.service.UserService;
+import ru.yandex.practicum.javafilmorate.service.interfaces.UserService;
 import ru.yandex.practicum.javafilmorate.util.exception.ValidationException;
 
 import javax.validation.Valid;
@@ -34,7 +35,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     public User getById(@PathVariable int id) {
-        return userService.getById(id).orElseThrow();
+        return userService.getById(id).orElseThrow(() -> new EmptyResultDataAccessException(1));
     }
 
     @GetMapping
@@ -56,7 +57,9 @@ public class UserController {
 
     @GetMapping("{id}/friends")
     public Collection<User> getFriends(@PathVariable int id) {
-        return userService.getFriends(id);
+        Collection<User> friends = userService.getFriends(id);
+        log.info("Friends of user with id {} are {}", id, friends);
+        return friends;
     }
 
     @GetMapping("{id}/friends/common/{otherId}")

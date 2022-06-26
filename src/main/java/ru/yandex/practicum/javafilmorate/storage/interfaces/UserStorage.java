@@ -1,4 +1,4 @@
-package ru.yandex.practicum.javafilmorate.storage;
+package ru.yandex.practicum.javafilmorate.storage.interfaces;
 
 import ru.yandex.practicum.javafilmorate.model.User;
 
@@ -12,5 +12,7 @@ public interface UserStorage {
 
     Collection<User> findAll();
 
-    void deleteById(int id);
+    int update(User user);
+
+    boolean deleteById(int id);
 }
